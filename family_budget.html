@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭记账</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .navbar h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #ff7e5f;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            background-color: #feb47b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 126, 95, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-wide {
+            width: 200px;
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+        }
+
+        /* 预算卡片 */
+        .budget-cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .budget-cards-container .card {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .budget-item {
+            text-align: center;
+        }
+
+        .budget-item h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .budget-item .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .warning {
+            color: #ff4757;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* 筛选器 */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filters select:hover {
+            border-color: #ff7e5f;
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .filters select:focus {
+            outline: none;
+            border-color: #ff7e5f;
+            box-shadow: 0 0 0 2px rgba(255, 126, 95, 0.2);
+        }
+
+        /* 图表容器 */
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .member-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .member-avatar {
+            font-size: 24px;
+        }
+
+        .member-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+        }
+
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* 记录列表 */
+        .records-list {
+            margin-top: 20px;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .record-item:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-avatar {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-category {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .record-date {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .record-amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .record-amount.income {
+            color: #2ed573;
+        }
+
+        .record-amount.expense {
+            color: #ff4757;
+        }
+
+        .record-delete {
+            background: none;
+            border: none;
+            color: #ff4757;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .records-toggle {
+            text-align: right;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            margin-top: 10px;
+        }
+
+        .records-toggle span {
+            cursor: pointer;
+            color: #ff7e5f;
+            font-size: 14px;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .records-toggle span:hover {
+            color: #ff6b6b;
+            text-decoration: underline;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn-wide {
+                flex: 2;
+            }
+
+            .nav-buttons .btn {
+                flex: 1;
+            }
+
+            .budget-cards-container,
+            .charts-container {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filters select {
+                width: 100%;
+                border-radius: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <div class="navbar">
+            <h1>家庭记账</h1>
+            <div class="nav-buttons">
+                <button class="btn btn-primary btn-wide" id="addRecordBtn">记一笔</button>
+                <button class="btn btn-secondary" id="addMemberBtn">编辑成员</button>
+                <button class="btn btn-secondary" id="setBudgetBtn">设置预算</button>
+            </div>
+        </div>
+
+        <!-- 预算卡片 -->
+        <div class="budget-cards-container">
+            <div class="card">
+                <div class="budget-item">
+                    <h3>当前年月</h3>
+                    <div class="amount" id="currentMonth"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="budget-item">
+                    <h3>本月预算</h3>
+                    <div class="amount" id="monthlyBudget">5000 元</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="budget-item">
+                    <h3>本月总支出</h3>
+                    <div class="amount" id="monthlyExpense">0 元</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="budget-item">
+                    <h3>本月剩余</h3>
+                    <div class="amount" id="monthlyRemaining">5000 元</div>
+                    <div class="warning" id="overBudgetWarning" style="display: none;">⚠️ 本月已超支</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="filters">
+            <select id="monthFilter">
+                <option value="all">全部月份</option>
+            </select>
+            <select id="memberFilter">
+                <option value="all">全部成员</option>
+            </select>
+        </div>
+
+        <!-- 记录列表 -->
+        <div class="card">
+            <h2>收支记录</h2>
+            <div class="records-list" id="recordsList">
+                <!-- 记录将通过JavaScript动态添加 -->
+            </div>
+            <div class="records-toggle">
+                <span id="recordsToggleText" style="cursor: pointer; color: #ff7e5f; font-size: 14px; user-select: none;">折叠</span>
+            </div>
+        </div>
+
+        <!-- 统计图表 -->
+        <div class="charts-container">
+            <div class="card chart-card">
+                <h2>支出类别分布</h2>
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h2>每日支出趋势</h2>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑成员模态框 -->
+    <div class="modal" id="memberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑家庭成员</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <!-- 成员列表 -->
+            <div id="memberList" style="margin-bottom: 20px;">
+                <!-- 成员列表将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 添加成员表单 -->
+            <div style="border-top: 1px solid #eee; padding-top: 20px;">
+                <h4 style="margin-bottom: 15px;">添加新成员</h4>
+                <form id="memberForm">
+                    <div class="form-group">
+                        <label for="memberName">昵称</label>
+                        <input type="text" id="memberName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberAvatar">头像</label>
+                        <select id="memberAvatar" required>
+                            <option value="👨">👨 爸爸</option>
+                            <option value="👩">👩 妈妈</option>
+                            <option value="👧">👧 女儿</option>
+                            <option value="👦">👦 儿子</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">确定</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加记录模态框 -->
+    <div class="modal" id="recordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加收支记录</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="recordForm">
+                <div class="form-group">
+                    <label for="recordType">类型</label>
+                    <select id="recordType" required>
+                        <option value="income">收入</option>
+                        <option value="expense">支出</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recordAmount">金额</label>
+                    <input type="number" id="recordAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="recordCategory">分类</label>
+                    <select id="recordCategory" required>
+                        <option value="餐饮">餐饮</option>
+                        <option value="购物">购物</option>
+                        <option value="工资">工资</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="交通">交通</option>
+                        <option value="医疗">医疗</option>
+                        <option value="教育">教育</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recordDate">日期</label>
+                    <input type="date" id="recordDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="recordMember">家庭成员</label>
+                    <select id="recordMember" required>
+                        <!-- 成员选项将通过JavaScript动态添加 -->
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">确定</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 设置预算模态框 -->
+    <div class="modal" id="budgetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>设置月度预算</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="budgetForm">
+                <div class="form-group">
+                    <label for="budgetAmount">预算金额</label>
+                    <input type="number" id="budgetAmount" step="100" value="5000" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">确定</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 数据结构
+        let members = [];
+        let records = [];
+        let monthlyBudget = 5000;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateCurrentMonth();
+            updateFilters();
+            renderRecords();
+            updateBudgetInfo();
+            drawCharts();
+            setupEventListeners();
+        });
+
+        // 加载数据
+        function loadData() {
+            const savedMembers = localStorage.getItem('familyMembers');
+            const savedRecords = localStorage.getItem('familyRecords');
+            const savedBudget = localStorage.getItem('monthlyBudget');
+
+            if (savedMembers) {
+                members = JSON.parse(savedMembers);
+            } else {
+                // 默认成员
+                members = [
+                    { id: 1, name: '爸爸', avatar: '👨' },
+                    { id: 2, name: '妈妈', avatar: '👩' }
+                ];
+                saveMembers();
+            }
+
+            if (savedRecords) {
+                records = JSON.parse(savedRecords);
+            }
+
+            if (savedBudget) {
+                monthlyBudget = parseFloat(savedBudget);
+            }
+        }
+
+        // 保存数据
+        function saveMembers() {
+            localStorage.setItem('familyMembers', JSON.stringify(members));
+        }
+
+        function saveRecords() {
+            localStorage.setItem('familyRecords', JSON.stringify(records));
+        }
+
+        function saveBudget() {
+            localStorage.setItem('monthlyBudget', monthlyBudget.toString());
+        }
+
+        // 更新当前月份
+        function updateCurrentMonth() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+            document.getElementById('currentMonth').textContent = `${year}年${month}月`;
+        }
+
+        // 更新筛选器
+        function updateFilters() {
+            // 月份筛选器
+            const monthFilter = document.getElementById('monthFilter');
+            monthFilter.innerHTML = '<option value="all">全部月份</option>';
+            
+            // 获取所有唯一的月份
+            const months = [...new Set(records.map(record => {
+                const date = new Date(record.date);
+                return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+            }))];
+            
+            months.sort().reverse().forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthFilter.appendChild(option);
+            });
+
+            // 成员筛选器
+            const memberFilter = document.getElementById('memberFilter');
+            memberFilter.innerHTML = '<option value="all">全部成员</option>';
+            
+            members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = `${member.avatar} ${member.name}`;
+                memberFilter.appendChild(option);
+            });
+
+            // 记录表单中的成员选择
+            const recordMemberSelect = document.getElementById('recordMember');
+            recordMemberSelect.innerHTML = '';
+            members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = `${member.avatar} ${member.name}`;
+                recordMemberSelect.appendChild(option);
+            });
+        }
+
+        // 渲染成员列表
+        function renderMemberList() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = '';
+            
+            members.forEach(member => {
+                const memberItem = document.createElement('div');
+                memberItem.className = 'member-item';
+                
+                const memberInfo = document.createElement('div');
+                memberInfo.className = 'member-info';
+                
+                const memberAvatar = document.createElement('span');
+                memberAvatar.className = 'member-avatar';
+                memberAvatar.textContent = member.avatar;
+                
+                const memberName = document.createElement('span');
+                memberName.className = 'member-name';
+                memberName.textContent = member.name;
+                
+                memberInfo.appendChild(memberAvatar);
+                memberInfo.appendChild(memberName);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.textContent = '删除';
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm(`确定要删除成员"${member.name}"吗？`)) {
+                        members = members.filter(m => m.id !== member.id);
+                        saveMembers();
+                        renderMemberList();
+                        updateFilters();
+                        updateRecords();
+                        updateBudgetInfo();
+                        drawCategoryChart();
+                        drawDailyChart();
+                    }
+                });
+                
+                memberItem.appendChild(memberInfo);
+                memberItem.appendChild(deleteBtn);
+                memberList.appendChild(memberItem);
+            });
+        }
+
+        // 渲染记录列表
+        function renderRecords() {
+            const recordsList = document.getElementById('recordsList');
+            const monthFilter = document.getElementById('monthFilter').value;
+            const memberFilter = document.getElementById('memberFilter').value;
+
+            // 筛选记录
+            let filteredRecords = records;
+            
+            if (monthFilter !== 'all') {
+                filteredRecords = filteredRecords.filter(record => {
+                    const recordDate = new Date(record.date);
+                    const recordMonth = `${recordDate.getFullYear()}-${(recordDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                    return recordMonth === monthFilter;
+                });
+            }
+
+            if (memberFilter !== 'all') {
+                filteredRecords = filteredRecords.filter(record => record.memberId == memberFilter);
+            }
+
+            // 按日期排序（最新的在前）
+            filteredRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // 渲染记录
+            recordsList.innerHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.style.textAlign = 'center';
+                emptyMessage.style.color = '#666';
+                emptyMessage.style.padding = '20px';
+                emptyMessage.textContent = '暂无记录';
+                recordsList.appendChild(emptyMessage);
+                return;
+            }
+
+            filteredRecords.forEach(record => {
+                const member = members.find(m => m.id == record.memberId);
+                if (!member) return;
+
+                const recordItem = document.createElement('div');
+                recordItem.className = 'record-item';
+
+                const avatarSpan = document.createElement('span');
+                avatarSpan.className = 'record-avatar';
+                avatarSpan.textContent = member.avatar;
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'record-info';
+
+                const categorySpan = document.createElement('div');
+                categorySpan.className = 'record-category';
+                categorySpan.textContent = record.category;
+
+                const dateSpan = document.createElement('div');
+                dateSpan.className = 'record-date';
+                dateSpan.textContent = record.date;
+
+                infoDiv.appendChild(categorySpan);
+                infoDiv.appendChild(dateSpan);
+
+                const amountSpan = document.createElement('span');
+                amountSpan.className = `record-amount ${record.type}`;
+                amountSpan.textContent = record.type === 'income' ? `+${record.amount.toFixed(2)}` : `-${record.amount.toFixed(2)}`;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'record-delete';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('确定要删除这条记录吗？')) {
+                        records = records.filter(r => r.id !== record.id);
+                        saveRecords();
+                        renderRecords();
+                        updateBudgetInfo();
+                        drawCategoryChart();
+                        drawDailyChart();
+                    }
+                });
+
+                recordItem.appendChild(avatarSpan);
+                recordItem.appendChild(infoDiv);
+                recordItem.appendChild(amountSpan);
+                recordItem.appendChild(deleteBtn);
+
+                recordsList.appendChild(recordItem);
+            });
+        }
+
+        // 更新预算信息
+        function updateBudgetInfo() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            // 计算本月总支出
+            const monthlyExpense = records.reduce((sum, record) => {
+                const recordDate = new Date(record.date);
+                if (recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear && record.type === 'expense') {
+                    return sum + record.amount;
+                }
+                return sum;
+            }, 0);
+
+            const monthlyRemaining = monthlyBudget - monthlyExpense;
+
+            // 更新显示
+            document.getElementById('monthlyBudget').textContent = `${monthlyBudget.toFixed(2)} 元`;
+            document.getElementById('monthlyExpense').textContent = `${monthlyExpense.toFixed(2)} 元`;
+            document.getElementById('monthlyRemaining').textContent = `${monthlyRemaining.toFixed(2)} 元`;
+
+            // 检查是否超支
+            if (monthlyRemaining < 0) {
+                document.getElementById('overBudgetWarning').style.display = 'block';
+            } else {
+                document.getElementById('overBudgetWarning').style.display = 'none';
+            }
+        }
+
+        // 绘制图表
+        function drawCharts() {
+            drawCategoryChart();
+            drawDailyChart();
+        }
+
+        // 绘制支出类别分布图表（饼状图）
+        function drawCategoryChart() {
+            const canvas = document.getElementById('categoryChart');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布实际尺寸
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            // 筛选本月支出记录
+            const monthlyExpenses = records.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear && record.type === 'expense';
+            });
+
+            // 按类别分组
+            const categoryMap = {};
+            monthlyExpenses.forEach(record => {
+                if (categoryMap[record.category]) {
+                    categoryMap[record.category] += record.amount;
+                } else {
+                    categoryMap[record.category] = record.amount;
+                }
+            });
+
+            const categories = Object.keys(categoryMap);
+            const amounts = Object.values(categoryMap);
+
+            if (categories.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('本月暂无支出记录', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // 饼状图颜色
+            const colors = ['#ff7e5f', '#feb47b', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9'];
+            
+            // 计算总金额
+            const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0);
+            
+            // 绘制饼状图
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 40;
+            
+            let startAngle = -Math.PI / 2;
+            
+            // 存储扇形区域信息用于鼠标交互
+            canvas.pieSlices = [];
+            
+            categories.forEach((category, index) => {
+                const sliceAngle = (amounts[index] / totalAmount) * 2 * Math.PI;
+                const endAngle = startAngle + sliceAngle;
+                
+                // 绘制扇形
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                
+                // 存储扇形信息
+                canvas.pieSlices.push({
+                    category,
+                    amount: amounts[index],
+                    startAngle,
+                    endAngle,
+                    color: colors[index % colors.length],
+                    centerX,
+                    centerY,
+                    radius
+                });
+                
+                // 绘制标签
+                const labelAngle = startAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+                const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(category, labelX, labelY);
+                
+                const percentage = ((amounts[index] / totalAmount) * 100).toFixed(1);
+                ctx.font = '10px Arial';
+                ctx.fillText(`${percentage}%`, labelX, labelY + 15);
+                
+                startAngle = endAngle;
+            });
+            
+            // 添加鼠标悬停事件
+            canvas.onmousemove = function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const dx = mouseX - centerX;
+                const dy = mouseY - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= radius) {
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < -Math.PI / 2) {
+                        angle += 2 * Math.PI;
+                    }
+                    if (angle < -Math.PI / 2) {
+                        angle += 2 * Math.PI;
+                    }
+                    
+                    // 调整角度范围
+                    let adjustedAngle = angle;
+                    if (adjustedAngle < -Math.PI / 2) {
+                        adjustedAngle += 2 * Math.PI;
+                    }
+                    
+                    // 查找鼠标所在的扇形
+                    let foundSlice = null;
+                    for (const slice of canvas.pieSlices) {
+                        let start = slice.startAngle;
+                        let end = slice.endAngle;
+                        
+                        // 处理角度跨越 -PI/2 的情况
+                        if (start < -Math.PI / 2 && end >= -Math.PI / 2) {
+                            if (adjustedAngle >= start || adjustedAngle < end) {
+                                foundSlice = slice;
+                                break;
+                            }
+                        } else {
+                            if (adjustedAngle >= start && adjustedAngle < end) {
+                                foundSlice = slice;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // 重绘饼状图
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    let currentStartAngle = -Math.PI / 2;
+                    
+                    canvas.pieSlices.forEach((slice, index) => {
+                        const isHovered = foundSlice && slice.category === foundSlice.category;
+                        const currentRadius = isHovered ? radius * 1.1 : radius;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(slice.centerX, slice.centerY);
+                        ctx.arc(slice.centerX, slice.centerY, currentRadius, slice.startAngle, slice.endAngle);
+                        ctx.closePath();
+                        ctx.fillStyle = slice.color;
+                        ctx.fill();
+                        
+                        // 添加阴影效果
+                        if (isHovered) {
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetX = 3;
+                            ctx.shadowOffsetY = 3;
+                        } else {
+                            ctx.shadowColor = 'transparent';
+                            ctx.shadowBlur = 0;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 0;
+                        }
+                        
+                        // 绘制标签
+                        const labelAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+                        const labelX = slice.centerX + Math.cos(labelAngle) * (currentRadius * 0.7);
+                        const labelY = slice.centerY + Math.sin(labelAngle) * (currentRadius * 0.7);
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(slice.category, labelX, labelY);
+                        
+                        const percentage = ((slice.amount / totalAmount) * 100).toFixed(1);
+                        ctx.font = '10px Arial';
+                        ctx.fillText(`${percentage}%`, labelX, labelY + 15);
+                    });
+                    
+                    // 显示悬停信息
+                    if (foundSlice) {
+                        const tooltipX = mouseX + 10;
+                        const tooltipY = mouseY + 10;
+                        
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.fillRect(tooltipX, tooltipY, 120, 50);
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(foundSlice.category, tooltipX + 10, tooltipY + 10);
+                        ctx.fillText(`金额: ${foundSlice.amount.toFixed(2)}元`, tooltipX + 10, tooltipY + 30);
+                    }
+                }
+            };
+            
+            canvas.onmouseleave = function() {
+                // 重绘原始饼状图
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                let currentStartAngle = -Math.PI / 2;
+                
+                canvas.pieSlices.forEach((slice, index) => {
+                    ctx.beginPath();
+                    ctx.moveTo(slice.centerX, slice.centerY);
+                    ctx.arc(slice.centerX, slice.centerY, slice.radius, slice.startAngle, slice.endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = slice.color;
+                    ctx.fill();
+                    
+                    // 绘制标签
+                    const labelAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+                    const labelX = slice.centerX + Math.cos(labelAngle) * (slice.radius * 0.7);
+                    const labelY = slice.centerY + Math.sin(labelAngle) * (slice.radius * 0.7);
+                    
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(slice.category, labelX, labelY);
+                    
+                    const percentage = ((slice.amount / totalAmount) * 100).toFixed(1);
+                    ctx.font = '10px Arial';
+                    ctx.fillText(`${percentage}%`, labelX, labelY + 15);
+                });
+            };
+        }
+
+        // 绘制每日支出趋势图表（折线图）
+        function drawDailyChart() {
+            const canvas = document.getElementById('dailyChart');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布实际尺寸
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // 初始化每日支出数组
+            const dailyExpenses = new Array(daysInMonth).fill(0);
+
+            // 计算每日支出
+            records.forEach(record => {
+                const recordDate = new Date(record.date);
+                if (recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear && record.type === 'expense') {
+                    const day = recordDate.getDate() - 1;
+                    dailyExpenses[day] += record.amount;
+                }
+            });
+
+            // 计算最大值
+            const maxAmount = Math.max(...dailyExpenses, 1);
+            
+            // 图表边距
+            const padding = { top: 30, right: 30, bottom: 40, left: 50 };
+            const chartWidth = canvas.width - padding.left - padding.right;
+            const chartHeight = canvas.height - padding.top - padding.bottom;
+
+            // 绘制坐标轴
+            ctx.beginPath();
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            
+            // Y轴
+            ctx.moveTo(padding.left, padding.top);
+            ctx.lineTo(padding.left, canvas.height - padding.bottom);
+            
+            // X轴
+            ctx.lineTo(canvas.width - padding.right, canvas.height - padding.bottom);
+            ctx.stroke();
+
+            // 绘制Y轴刻度和网格线（固定为0-500，间隔100）
+            const yMax = 500;
+            const yStep = 100;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding.top + (chartHeight / 5) * i;
+                const value = yMax - (yStep * i);
+                
+                // 网格线
+                ctx.beginPath();
+                ctx.strokeStyle = '#eee';
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(canvas.width - padding.right, y);
+                ctx.stroke();
+                
+                // Y轴标签
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(value.toFixed(0), padding.left - 5, y);
+            }
+
+            // 绘制X轴刻度（间隔为5）
+            const xInterval = 5;
+            for (let day = 0; day < daysInMonth; day += xInterval) {
+                const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText(day + 1, x, canvas.height - padding.bottom + 5);
+            }
+
+            // 绘制折线
+            if (dailyExpenses.some(amount => amount > 0)) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#ff7e5f';
+                ctx.lineWidth = 2;
+                
+                let firstPoint = true;
+                dailyExpenses.forEach((amount, day) => {
+                    if (amount > 0 || !firstPoint) {
+                        const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                        const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                        
+                        if (firstPoint) {
+                            ctx.moveTo(x, y);
+                            firstPoint = false;
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                });
+                ctx.stroke();
+
+                // 绘制数据点
+                dailyExpenses.forEach((amount, day) => {
+                    if (amount > 0) {
+                        const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                        const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#ff7e5f';
+                        ctx.fill();
+                        ctx.strokeStyle = '#fff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                });
+
+                // 添加鼠标悬停事件
+                canvas.onmousemove = function(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    // 查找最近的数据点
+                    let closestDay = -1;
+                    let minDistance = Infinity;
+                    
+                    dailyExpenses.forEach((amount, day) => {
+                        if (amount > 0) {
+                            const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                            const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                            
+                            const distance = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+                            if (distance < 20 && distance < minDistance) {
+                                minDistance = distance;
+                                closestDay = day;
+                            }
+                        }
+                    });
+                    
+                    // 重绘图表
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 重新绘制坐标轴
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ddd';
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(padding.left, padding.top);
+                    ctx.lineTo(padding.left, canvas.height - padding.bottom);
+                    ctx.lineTo(canvas.width - padding.right, canvas.height - padding.bottom);
+                    ctx.stroke();
+
+                    // 重新绘制Y轴刻度和网格线（固定为0-500，间隔100）
+                    const yMax = 500;
+                    const yStep = 100;
+                    for (let i = 0; i <= 5; i++) {
+                        const y = padding.top + (chartHeight / 5) * i;
+                        const value = yMax - (yStep * i);
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#eee';
+                        ctx.moveTo(padding.left, y);
+                        ctx.lineTo(canvas.width - padding.right, y);
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = '#666';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'right';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(value.toFixed(0), padding.left - 5, y);
+                    }
+
+                    // 重新绘制X轴刻度
+                    for (let day = 0; day < daysInMonth; day += xInterval) {
+                        const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                        
+                        ctx.fillStyle = '#666';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(day + 1, x, canvas.height - padding.bottom + 5);
+                    }
+
+                    // 重新绘制折线
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ff7e5f';
+                    ctx.lineWidth = 2;
+                    
+                    let firstPoint = true;
+                    dailyExpenses.forEach((amount, day) => {
+                        if (amount > 0 || !firstPoint) {
+                            const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                            const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                            
+                            if (firstPoint) {
+                                ctx.moveTo(x, y);
+                                firstPoint = false;
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        }
+                    });
+                    ctx.stroke();
+
+                    // 重新绘制数据点
+                    dailyExpenses.forEach((amount, day) => {
+                        if (amount > 0) {
+                            const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                            const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                            
+                            const isHovered = day === closestDay;
+                            const radius = isHovered ? 6 : 4;
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                            ctx.fillStyle = '#ff7e5f';
+                            ctx.fill();
+                            ctx.strokeStyle = '#fff';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                            
+                            // 悬停效果
+                            if (isHovered) {
+                                ctx.shadowColor = 'rgba(255, 126, 95, 0.5)';
+                                ctx.shadowBlur = 10;
+                            }
+                        }
+                    });
+                    
+                    // 显示悬停信息
+                    if (closestDay !== -1) {
+                        const amount = dailyExpenses[closestDay];
+                        const x = padding.left + (closestDay / (daysInMonth - 1)) * chartWidth;
+                        const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                        
+                        const tooltipX = x + 10;
+                        const tooltipY = y - 10;
+                        
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                        ctx.fillRect(tooltipX, tooltipY, 100, 40);
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(`${closestDay + 1}日`, tooltipX + 10, tooltipY + 10);
+                        ctx.fillText(`${amount.toFixed(2)}元`, tooltipX + 10, tooltipY + 25);
+                    }
+                };
+                
+                canvas.onmouseleave = function() {
+                    // 重绘原始图表
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 重新绘制坐标轴
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ddd';
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(padding.left, padding.top);
+                    ctx.lineTo(padding.left, canvas.height - padding.bottom);
+                    ctx.lineTo(canvas.width - padding.right, canvas.height - padding.bottom);
+                    ctx.stroke();
+
+                    // 重新绘制Y轴刻度和网格线（固定为0-500，间隔100）
+                    const yMax = 500;
+                    const yStep = 100;
+                    for (let i = 0; i <= 5; i++) {
+                        const y = padding.top + (chartHeight / 5) * i;
+                        const value = yMax - (yStep * i);
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#eee';
+                        ctx.moveTo(padding.left, y);
+                        ctx.lineTo(canvas.width - padding.right, y);
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = '#666';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'right';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(value.toFixed(0), padding.left - 5, y);
+                    }
+
+                    // 重新绘制X轴刻度
+                    for (let day = 0; day < daysInMonth; day += xInterval) {
+                        const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                        
+                        ctx.fillStyle = '#666';
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(day + 1, x, canvas.height - padding.bottom + 5);
+                    }
+
+                    // 重新绘制折线
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ff7e5f';
+                    ctx.lineWidth = 2;
+                    
+                    let firstPoint = true;
+                    dailyExpenses.forEach((amount, day) => {
+                        if (amount > 0 || !firstPoint) {
+                            const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                            const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                            
+                            if (firstPoint) {
+                                ctx.moveTo(x, y);
+                                firstPoint = false;
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        }
+                    });
+                    ctx.stroke();
+
+                    // 重新绘制数据点
+                    dailyExpenses.forEach((amount, day) => {
+                        if (amount > 0) {
+                            const x = padding.left + (day / (daysInMonth - 1)) * chartWidth;
+                            const y = padding.top + chartHeight - (amount / 500) * chartHeight;
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                            ctx.fillStyle = '#ff7e5f';
+                            ctx.fill();
+                            ctx.strokeStyle = '#fff';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                        }
+                    });
+                };
+            } else {
+                // 没有数据时显示提示
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('本月暂无支出记录', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 模态框控制
+            const modals = ['memberModal', 'recordModal', 'budgetModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                const closeBtn = modal.querySelector('.close');
+                
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                window.addEventListener('click', (e) => {
+                    if (e.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+
+            // 打开编辑成员模态框
+            document.getElementById('addMemberBtn').addEventListener('click', () => {
+                renderMemberList();
+                document.getElementById('memberModal').style.display = 'block';
+            });
+
+            // 打开添加记录模态框
+            document.getElementById('addRecordBtn').addEventListener('click', () => {
+                // 设置默认日期为今天
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('recordDate').value = today;
+                document.getElementById('recordModal').style.display = 'block';
+            });
+
+            // 打开设置预算模态框
+            document.getElementById('setBudgetBtn').addEventListener('click', () => {
+                document.getElementById('budgetAmount').value = monthlyBudget;
+                document.getElementById('budgetModal').style.display = 'block';
+            });
+
+            // 提交成员表单
+            document.getElementById('memberForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('memberName').value;
+                const avatar = document.getElementById('memberAvatar').value;
+                
+                const newMember = {
+                    id: Date.now(),
+                    name,
+                    avatar
+                };
+                
+                members.push(newMember);
+                saveMembers();
+                renderMemberList();
+                updateFilters();
+                document.getElementById('memberModal').style.display = 'none';
+                document.getElementById('memberForm').reset();
+            });
+
+            // 提交记录表单
+            document.getElementById('recordForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const type = document.getElementById('recordType').value;
+                const amount = parseFloat(document.getElementById('recordAmount').value);
+                const category = document.getElementById('recordCategory').value;
+                const date = document.getElementById('recordDate').value;
+                const memberId = parseInt(document.getElementById('recordMember').value);
+                
+                const newRecord = {
+                    id: Date.now(),
+                    type,
+                    amount,
+                    category,
+                    date,
+                    memberId
+                };
+                
+                records.push(newRecord);
+                saveRecords();
+                renderRecords();
+                updateBudgetInfo();
+                drawCategoryChart();
+                drawDailyChart();
+                updateFilters();
+                document.getElementById('recordModal').style.display = 'none';
+                document.getElementById('recordForm').reset();
+            });
+
+            // 提交预算表单
+            document.getElementById('budgetForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                monthlyBudget = parseFloat(document.getElementById('budgetAmount').value);
+                saveBudget();
+                updateBudgetInfo();
+                document.getElementById('budgetModal').style.display = 'none';
+            });
+
+            // 筛选器变化事件
+            document.getElementById('monthFilter').addEventListener('change', renderRecords);
+            document.getElementById('memberFilter').addEventListener('change', renderRecords);
+
+            // 展开/折叠记录列表
+            let recordsExpanded = true;
+            const recordsToggleText = document.getElementById('recordsToggleText');
+            const recordsList = document.getElementById('recordsList');
+            
+            recordsToggleText.addEventListener('click', () => {
+                recordsExpanded = !recordsExpanded;
+                if (recordsExpanded) {
+                    recordsList.style.display = 'block';
+                    recordsToggleText.textContent = '折叠';
+                } else {
+                    recordsList.style.display = 'none';
+                    recordsToggleText.textContent = '展开';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
