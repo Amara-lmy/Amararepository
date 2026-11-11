@@ -369,11 +369,14 @@
             padding: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transform: translateZ(0);
             transition: transform 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
+            will-change: transform;
         }
 
         .card h2 {
@@ -607,7 +610,10 @@
             updateFilters();
             renderRecords();
             updateBudgetInfo();
-            drawCharts();
+            // 延迟绘制图表，让浏览器先完成首屏渲染，提升打开速度
+            requestAnimationFrame(function() {
+                requestAnimationFrame(drawCharts);
+            });
             setupEventListeners();
         });
 
@@ -790,8 +796,15 @@
                 recordsToRender = filteredRecords.slice(0, 2);
             }
 
+            // 用成员映射表避免循环内重复查找
+            const memberMap = {};
+            members.forEach(m => { memberMap[m.id] = m; });
+
+            // 用 DocumentFragment 批量插入，减少重排次数
+            const fragment = document.createDocumentFragment();
+
             recordsToRender.forEach(record => {
-                const member = members.find(m => m.id == record.memberId);
+                const member = memberMap[record.memberId];
                 if (!member) return;
 
                 const recordItem = document.createElement('div');
@@ -843,8 +856,10 @@
                 recordItem.appendChild(amountSpan);
                 recordItem.appendChild(deleteBtn);
 
-                recordsList.appendChild(recordItem);
+                fragment.appendChild(recordItem);
             });
+
+            recordsList.appendChild(fragment);
         }
 
         // 更新预算信息
@@ -984,12 +999,16 @@
                 startAngle = endAngle;
             });
             
-            // 添加鼠标悬停事件
+            // 添加鼠标悬停事件（用 requestAnimationFrame 节流，避免每次移动都重绘）
+            let categoryRafId = null;
             canvas.onmousemove = function(e) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                
+                if (categoryRafId) return;
+                categoryRafId = requestAnimationFrame(function() {
+                    categoryRafId = null;
+
                 const dx = mouseX - centerX;
                 const dy = mouseY - centerY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1090,6 +1109,7 @@
                         ctx.fillText(`金额: ${foundSlice.amount.toFixed(2)}元`, tooltipX + 10, tooltipY + 30);
                     }
                 }
+                });
             };
             
             canvas.onmouseleave = function() {
@@ -1246,12 +1266,16 @@
                     }
                 });
 
-                // 添加鼠标悬停事件
+                // 添加鼠标悬停事件（用 requestAnimationFrame 节流，避免每次移动都重绘）
+                let dailyRafId = null;
                 canvas.onmousemove = function(e) {
                     const rect = canvas.getBoundingClientRect();
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
-                    
+                    if (dailyRafId) return;
+                    dailyRafId = requestAnimationFrame(function() {
+                        dailyRafId = null;
+
                     // 查找最近的数据点
                     let closestDay = -1;
                     let minDistance = Infinity;
@@ -1377,6 +1401,7 @@
                         ctx.fillText(`${closestDay + 1}日`, tooltipX + 10, tooltipY + 10);
                         ctx.fillText(`${amount.toFixed(2)}元`, tooltipX + 10, tooltipY + 25);
                     }
+                    });
                 };
                 
                 canvas.onmouseleave = function() {
